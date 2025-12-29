@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/item.dart';
 import '../services/enhancement_service.dart';
@@ -15,13 +16,28 @@ class _EnhancementScreenState extends State<EnhancementScreen> {
   @override
   void initState() {
     super.initState();
-    _item = const Item(id: 'sword_001', name: '낡은 목검', level: 0, maxLevel: 70);
+    
+    final random = Random();
+    final availableAttributes = Attribute.values.where((a) => a != Attribute.none).toList();
+    final randomAttribute = availableAttributes[random.nextInt(availableAttributes.length)];
+
+    // 1. 여기서 const를 제거했습니다. (랜덤 ID와 속성 때문)
+    _item = Item(
+      id: 'sword_${DateTime.now().millisecondsSinceEpoch}', 
+      name: '낡은 목검', 
+      level: 0, 
+      maxLevel: 100,
+      attributes: [randomAttribute],
+    );
+    
     _service = EnhancementService();
   }
 
   void _tryEnhance() {
     final result = _service.enhance(_item);
-    setState(() { _item = result.item; });
+    setState(() { 
+      _item = result.item; 
+    });
 
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -39,71 +55,72 @@ class _EnhancementScreenState extends State<EnhancementScreen> {
     final nextCost = _item.isMaxed ? '-' : '${_service.costForLevel(_item.level)}';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Luck Forge', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('LUCK FORGE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 아이템 이름
             Text(
               _item.displayName,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: _item.tierColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: TextStyle(
+                fontSize: 38,
+                // 2. FontWeight.black 대신 w900 사용
+                fontWeight: FontWeight.w900, 
+                color: _item.textColor,
+                shadows: _item.glowShadows,
+              ),
             ),
-            const SizedBox(height: 8),
-            // 티어 정보
+            const SizedBox(height: 12),
             Text(
               _item.subTitle,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              // 3. withOpacity 대신 최신 문법인 withValues 사용
+              style: TextStyle(fontSize: 16, color: Colors.white.withValues(alpha: 0.5)),
             ),
-            const SizedBox(height: 50),
             
-            // 정보 패널
+            const SizedBox(height: 60),
+            
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(25),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[200]!),
+                // 여기도 최신 문법으로 수정
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: Colors.white10),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildStat('확률', nextChance),
-                  const SizedBox(width: 40),
-                  _buildStat('골드', nextCost),
+                  _buildStat('성공 확률', nextChance),
+                  Container(width: 1, height: 40, color: Colors.white10, margin: const EdgeInsets.symmetric(horizontal: 30)),
+                  _buildStat('필요 골드', nextCost),
                 ],
               ),
             ),
-            const SizedBox(height: 50),
+            
+            const SizedBox(height: 60),
 
-            // 강화 버튼
             SizedBox(
-              width: 220,
-              height: 64,
+              width: 240,
+              height: 70,
               child: ElevatedButton(
                 onPressed: _item.isMaxed ? null : _tryEnhance,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _item.tierColor,
                   foregroundColor: Colors.white,
-                  elevation: 5,
-                  // 수정된 부분: .withOpacity 대신 .withAlpha 사용 (또는 .withValues)
-                  shadowColor: _item.tierColor.withAlpha(128), // 255의 절반인 128이 약 0.5 opacity
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
                 child: Text(
-                  _item.displayLevel == 10 ? '티어 승급!' : '강화하기',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  _item.displayLevel == 10 ? '티어 승급 시도!' : '강 화 하 기',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -115,8 +132,10 @@ class _EnhancementScreenState extends State<EnhancementScreen> {
 
   Widget _buildStat(String l, String v) => Column(
     children: [
-      Text(l, style: const TextStyle(color: Colors.grey)),
-      Text(v, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+      // 4. 모든 withOpacity를 withValues로 수정
+      Text(l, style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 14)),
+      const SizedBox(height: 5),
+      Text(v, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
     ],
   );
 }
